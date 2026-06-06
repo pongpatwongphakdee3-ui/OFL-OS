@@ -1,9 +1,9 @@
 import { useStore } from "../store";
 
 const STAGE_LABEL: Record<string, string> = {
-  "loading-ffmpeg": "กำลังโหลดตัวแปลงเสียง…",
+  "loading-ffmpeg": "กำลังโหลดตัวแปลงเสียงสำรอง…",
   extracting: "กำลังดึงเสียงออกจากคลิป…",
-  decoding: "กำลังวิเคราะห์คลื่นเสียง…",
+  decoding: "กำลังอ่านเสียงจากคลิป…",
   transcribing: "กำลังถอดเสียงด้วย Gemini…",
 };
 

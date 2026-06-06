@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "./store";
 import { extractAudio, preloadFFmpeg } from "./lib/ffmpeg";
 import { computeWaveform } from "./lib/waveform";
+import { decodeFileToWav } from "./lib/audio";
 import { transcribe } from "./lib/gemini";
 import Uploader from "./components/Uploader";
 import VideoStage from "./components/VideoStage";
@@ -47,20 +48,31 @@ export default function App() {
     try {
       let audio = st.audioBlob;
       if (!audio) {
-        st.setStage("loading-ffmpeg");
-        st.setProgress(0);
-        await preloadFFmpeg();
-        st.setStage("extracting");
-        audio = await extractAudio(st.videoFile, (r) =>
-          useStore.getState().setProgress(r)
-        );
-        st.setAudio(audio);
         st.setStage("decoding");
+        st.setProgress(0);
         try {
-          const { peaks } = await computeWaveform(audio);
-          st.setPeaks(peaks);
-        } catch {
-          /* waveform is a nice-to-have; ignore decode failures */
+          // Primary: native Web Audio decode (works on iPad/Safari).
+          const dec = await decodeFileToWav(st.videoFile);
+          audio = dec.wav;
+          st.setAudio(audio);
+          st.setPeaks(dec.peaks);
+        } catch (nativeErr) {
+          // Fallback: FFmpeg.wasm for containers Safari/Chrome can't decode.
+          console.warn("Native decode failed, falling back to FFmpeg:", nativeErr);
+          st.setStage("loading-ffmpeg");
+          await preloadFFmpeg();
+          st.setStage("extracting");
+          audio = await extractAudio(st.videoFile, (r) =>
+            useStore.getState().setProgress(r)
+          );
+          st.setAudio(audio);
+          st.setStage("decoding");
+          try {
+            const { peaks } = await computeWaveform(audio);
+            st.setPeaks(peaks);
+          } catch {
+            /* waveform is a nice-to-have; ignore decode failures */
+          }
         }
       }
       st.setStage("transcribing");
