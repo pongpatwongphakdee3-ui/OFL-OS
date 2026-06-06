@@ -156,11 +156,18 @@ export default function Timeline({
       drag.current = { kind: "none" };
     };
 
+    const onCancel = () => {
+      if (marqueeRef.current) marqueeRef.current.style.display = "none";
+      drag.current = { kind: "none" };
+    };
+
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cues, duration, pxPerSec, selectedIds]);

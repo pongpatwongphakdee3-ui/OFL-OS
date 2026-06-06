@@ -20,6 +20,8 @@ const DEFAULT_STYLE: SubtitleStyle = {
   posXPct: 50,
   posYPct: 78,
   maxWidthPct: 86,
+  animation: "pop",
+  animationSpeed: 320,
 };
 
 const genId = () => crypto.randomUUID();
@@ -299,6 +301,16 @@ export const useStore = create<EditorState>()(
         model: s.model,
         pxPerSec: s.pxPerSec,
       }),
+      // Deep-merge persisted settings so newly added style fields (e.g.
+      // animation) fall back to defaults for returning users.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<EditorState>;
+        return {
+          ...current,
+          ...p,
+          style: { ...current.style, ...(p.style ?? {}) },
+        };
+      },
     }
   )
 );

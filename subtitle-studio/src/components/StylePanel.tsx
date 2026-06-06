@@ -1,10 +1,18 @@
 import { useStore } from "../store";
+import type { SubtitleAnimation } from "../types";
 
 const WEIGHTS = [
   { v: 400, label: "ปกติ" },
   { v: 600, label: "กึ่งหนา" },
   { v: 700, label: "หนา" },
   { v: 800, label: "หนามาก" },
+];
+
+const ANIMS: { v: SubtitleAnimation; label: string }[] = [
+  { v: "none", label: "ไม่มี" },
+  { v: "pop", label: "เด้ง" },
+  { v: "fade-up", label: "เลื่อนขึ้น" },
+  { v: "pop-word", label: "ทีละคำ" },
 ];
 
 export default function StylePanel() {
@@ -84,6 +92,37 @@ export default function StylePanel() {
           onChange={(e) => setStyle({ letterSpacing: Number(e.target.value) })}
         />
       </label>
+
+      <label className="field">
+        <span>อนิเมชันคำขึ้น (Reels)</span>
+        <div className="chunk-row">
+          {ANIMS.map((a) => (
+            <button
+              key={a.v}
+              className={"chip" + (style.animation === a.v ? " on" : "")}
+              onClick={() => setStyle({ animation: a.v })}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      </label>
+
+      {style.animation !== "none" && (
+        <label className="field">
+          <span>ความเร็วอนิเมชัน · {style.animationSpeed}ms</span>
+          <input
+            type="range"
+            min={120}
+            max={800}
+            step={20}
+            value={style.animationSpeed}
+            onChange={(e) =>
+              setStyle({ animationSpeed: Number(e.target.value) })
+            }
+          />
+        </label>
+      )}
 
       <div className="toggle-row">
         <label className="toggle">

@@ -18,7 +18,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
         <h2>ตั้งค่า Gemini</h2>
         <p className="muted">
           คีย์จะถูกเก็บไว้ใน <code>localStorage</code> ของเบราว์เซอร์นี้เท่านั้น
-          ไม่ถูกส่งไปที่เซิร์ฟเวอร์ใด ๆ นอกจาก Google
+          ไม่ถูกส่งไปที่เซิร์ฟเวอร์ใด ๆ นอกจาก Google · เปิดหน้านี้ใหม่เพื่อ
+          <strong>เปลี่ยนคีย์ได้ทุกเมื่อ</strong> (เช่น ตอนคีย์หมดอายุ)
         </p>
 
         <label className="field">
@@ -57,6 +58,17 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
         </label>
 
         <div className="modal-actions">
+          <button
+            className="ghost danger"
+            disabled={!localKey && !apiKey}
+            onClick={() => {
+              setLocalKey("");
+              setApiKey("");
+            }}
+          >
+            ลบคีย์
+          </button>
+          <span style={{ flex: 1 }} />
           <button className="ghost" onClick={onClose}>
             ยกเลิก
           </button>

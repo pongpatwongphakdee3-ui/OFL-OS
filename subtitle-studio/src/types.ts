@@ -6,6 +6,9 @@ export interface Cue {
   end: number; // seconds
 }
 
+// How each subtitle chunk animates in when it becomes active.
+export type SubtitleAnimation = "none" | "pop" | "fade-up" | "pop-word";
+
 // How the subtitles are rendered on top of the video (CapCut/Reels style).
 export interface SubtitleStyle {
   fontFamily: string;
@@ -25,6 +28,8 @@ export interface SubtitleStyle {
   posXPct: number;
   posYPct: number;
   maxWidthPct: number; // max width of the text box as % of video width
+  animation: SubtitleAnimation;
+  animationSpeed: number; // ms for the entrance animation
 }
 
 export type ProcessStage =

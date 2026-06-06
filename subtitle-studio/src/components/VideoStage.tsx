@@ -6,6 +6,50 @@ function activeCues(cues: Cue[], t: number): Cue[] {
   return cues.filter((c) => t >= c.start && t < c.end);
 }
 
+// Thai has no spaces, so use Intl.Segmenter to split a chunk into real words
+// for the "word pop" animation (falls back to whitespace splitting). Accessed
+// without relying on TS lib types so it builds on any target.
+type WordSegmenter = { segment(input: string): Iterable<{ segment: string }> };
+let wordSeg: WordSegmenter | null = null;
+let segReady = false;
+function tokenize(text: string): string[] {
+  if (!segReady) {
+    try {
+      const Seg = (Intl as unknown as { Segmenter?: new (...a: any[]) => WordSegmenter })
+        .Segmenter;
+      wordSeg = Seg ? new Seg("th", { granularity: "word" }) : null;
+    } catch {
+      wordSeg = null;
+    }
+    segReady = true;
+  }
+  if (wordSeg) return Array.from(wordSeg.segment(text), (s) => s.segment);
+  return text.split(/(\s+)/);
+}
+
+function CueContent({ cue, style }: { cue: Cue; style: SubtitleStyle }) {
+  if (style.animation !== "pop-word") return <>{cue.text}</>;
+  const toks = tokenize(cue.text);
+  const stagger = Math.max(60, style.animationSpeed * 0.5);
+  return (
+    <>
+      {toks.map((t, i) =>
+        t.trim() === "" ? (
+          <span key={i}>{t}</span>
+        ) : (
+          <span
+            key={i}
+            className="tok"
+            style={{ animationDelay: `${i * stagger}ms` }}
+          >
+            {t}
+          </span>
+        )
+      )}
+    </>
+  );
+}
+
 function overlayVars(style: SubtitleStyle): CSSProperties {
   // Drive sizing with container-query height units (1cqh = 1% of the video box
   // height) so subtitles scale exactly with the preview, no JS measuring.
@@ -89,19 +133,32 @@ export default function VideoStage({
             onPointerUp={onPointerUp}
             title="ลากเพื่อย้ายตำแหน่งซับ"
           >
-            {active.map((c) => (
-              <div
-                key={c.id}
-                className={"subtitle-line" + (style.bgEnabled ? " has-bg" : "")}
-                style={
-                  style.bgEnabled
-                    ? ({ background: style.bgColor } as CSSProperties)
-                    : undefined
-                }
-              >
-                {c.text}
-              </div>
-            ))}
+            {active.map((c) => {
+              const animClass =
+                style.animation === "pop"
+                  ? " anim-pop"
+                  : style.animation === "fade-up"
+                  ? " anim-fade-up"
+                  : "";
+              const lineStyle: Record<string, string | number> = {
+                "--anim-dur": `${style.animationSpeed}ms`,
+              };
+              if (style.bgEnabled) lineStyle.background = style.bgColor;
+              return (
+                <div
+                  // include animation in key so switching presets re-triggers it
+                  key={c.id + style.animation}
+                  className={
+                    "subtitle-line" +
+                    (style.bgEnabled ? " has-bg" : "") +
+                    animClass
+                  }
+                  style={lineStyle as CSSProperties}
+                >
+                  <CueContent cue={c} style={style} />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
