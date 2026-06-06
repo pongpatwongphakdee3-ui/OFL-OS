@@ -129,7 +129,12 @@ export async function transcribe(opts: TranscribeOpts): Promise<Cue[]> {
       {
         role: "user",
         parts: [
-          { inline_data: { mime_type: "audio/mpeg", data: bytesToBase64(buf) } },
+          {
+            inline_data: {
+              mime_type: audio.type || "audio/mpeg",
+              data: bytesToBase64(buf),
+            },
+          },
           { text: buildPrompt(wordsPerChunk) },
         ],
       },
